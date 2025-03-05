@@ -1,0 +1,37 @@
+{
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "plugma dev",
+    "build": "plugma build",
+    "preview": "plugma preview",
+    "release": "plugma release"
+  },
+  "devDependencies": {
+    "html-template-tag": "4.0.1",
+    "typescript": "~5.6.2",
+    "vite": "^5.4.10",
+    "@figma/plugin-typings": "^1.100.2",
+    "plugma": "^1.2.8"
+  },
+  "plugma": {
+    "manifest": {
+      "id": "1477985447418731574",
+      "name": "radix-to-figma",
+      "main": "src/main.ts",
+      "editorType": [
+        "figma"
+      ],
+      "documentAccess": "dynamic-page",
+      "networkAccess": {
+        "allowedDomains": [
+          "none"
+        ],
+        "devAllowedDomains": [
+          "http://localhost",
+          "ws://localhost:9001"
+        ]
+      }
+    }
+  }
+}
