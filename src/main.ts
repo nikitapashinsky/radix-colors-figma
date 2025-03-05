@@ -26,6 +26,8 @@ export default async function () {
     // -------------------------------------------------------------------------
 
     if (!collectionNames.includes("Colors")) {
+      const notification = figma.notify("Generating color variables…");
+      await new Promise((resolve) => setTimeout(resolve, 100));
       // Create a variable collection "Colors" with two modes: "Light" and "Dark"
       const collection = figma.variables.createVariableCollection("Colors");
       collection.renameMode(collection.modes[0].modeId, "Light");
@@ -118,6 +120,7 @@ export default async function () {
             variable.setVariableCodeSyntax("WEB", createWebSyntax(name));
           });
         });
+      notification.cancel();
     }
 
     // -------------------------------------------------------------------------
@@ -136,6 +139,9 @@ export default async function () {
 
     const localColorVariables =
       await figma.variables.getLocalVariablesAsync("COLOR");
+
+    const notification = figma.notify("Creating color sheets…");
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     const solidColors = localColorVariables.filter(
       (variable) => !variable.name.includes("Alpha"),
@@ -392,10 +398,10 @@ export default async function () {
       });
       alphaColorsGrid.appendChild(row);
     }
-
     // -------------------------------------------------------------------------
     // CLOSE PLUGIN
     // -------------------------------------------------------------------------
+    notification.cancel();
     figma.closePlugin();
   } catch (error) {
     console.log(error);
