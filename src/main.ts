@@ -28,6 +28,7 @@ export default async function () {
     if (!collectionNames.includes("Colors")) {
       const notification = figma.notify("Generating color variables…");
       await new Promise((resolve) => setTimeout(resolve, 100));
+
       // Create a variable collection "Colors" with two modes: "Light" and "Dark"
       const collection = figma.variables.createVariableCollection("Colors");
       collection.renameMode(collection.modes[0].modeId, "Light");
@@ -36,7 +37,8 @@ export default async function () {
 
       // Holds references to created variables to avoid duplicates
       const createdVariablesMap: Map<string, Variable> = new Map();
-      // Create variables for colors
+
+      // Remove P3 and BW alpha scales
       const filteredColors = Object.keys(allColors).filter(
         (key) =>
           !key.includes("P3") &&
@@ -47,48 +49,49 @@ export default async function () {
       const sortedColorStrings = sortColorStrings(filteredColors, scalesOrder);
 
       sortedColorStrings.forEach((key) => {
-        // Non-null assertion to get rid of the "values is possibly undefined" warning
-        const values = Object.entries(allColors).find(
+        // scales[0] = "amber"
+        // scales[1] = { amber1: "#fefdfb", ...}
+        const scales = Object.entries(allColors).find(
           ([name]) => name === key,
-        )!;
-        Object.entries(values[1]).forEach(([name, value]) => {
-          const variable = createdVariablesMap.get(name);
+        ) as [string, Record<string, string>];
+        Object.entries(scales[1]).forEach(([colorStep, value]) => {
+          const variable = createdVariablesMap.get(colorStep);
           // Check if variable already exists
-          if (!createdVariablesMap.has(name)) {
-            if (name.includes("A")) {
+          if (!createdVariablesMap.has(colorStep)) {
+            if (colorStep.includes("A")) {
               // Create variables for transparent colors (e.g. amberA1)
               const variable = figma.variables.createVariable(
                 // Variable path and name in Figma will look like this:
                 // Colors/Alpha/Amber/Amber A1
-                `Alpha/${capitalize(values[0].slice(0, -1))}/${createVariableName(name)}`,
+                `Alpha/${capitalize(scales[0].slice(0, -1))}/${createVariableName(colorStep)}`,
                 collection,
                 "COLOR",
               );
               // Set light mode values for transparent colors
-              createdVariablesMap.set(name, variable);
+              createdVariablesMap.set(colorStep, variable);
               variable.setValueForMode(lightModeId, parseHex(value));
-            } else if (!name.includes("A")) {
+            } else if (!colorStep.includes("A")) {
               // Create variables for solid colors (e.g. amber1)
               const variable = figma.variables.createVariable(
                 // Variable path and name in Figma will look like this:
                 // Colors/Solid/Amber/Amber 1
-                `Solid/${capitalize(values[0])}/${createVariableName(name)}`,
+                `Solid/${capitalize(scales[0])}/${createVariableName(colorStep)}`,
                 collection,
                 "COLOR",
               );
               // Set light mode values for solid colors
-              createdVariablesMap.set(name, variable);
+              createdVariablesMap.set(colorStep, variable);
               variable.setValueForMode(lightModeId, parseHex(value));
             }
-          } else if (createdVariablesMap.has(name)) {
+          } else if (createdVariablesMap.has(colorStep)) {
             // Go through all colors again and set dark mode values
             variable?.setValueForMode(darkModeId, parseHex(value));
           }
           // Regex to get scale from 1 to 12, to use it to get the corresponding variable description
           const regex = /-?\d+(\.\d+)?/g;
-          const scale = name.match(regex)![0];
+          const scale = colorStep.match(regex)![0];
           if (variable) {
-            variable.setVariableCodeSyntax("WEB", createWebSyntax(name));
+            variable.setVariableCodeSyntax("WEB", createWebSyntax(colorStep));
             variable.description = descriptions.get(parseInt(scale)) ?? "";
           }
         });
