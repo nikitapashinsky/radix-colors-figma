@@ -2,7 +2,7 @@ export const getColorName = (str: string): string => {
   return str.replace(/^[^/]*\/[^/]*\//, "");
 };
 
-export const getGroupName = (str: string): string => {
+export const getScaleName = (str: string): string => {
   return str.replace(/^[^/]*\/([^/]*)\/.*$/, "$1");
 };
 
@@ -52,8 +52,8 @@ export function sortColors(variables: Variable[], order: string[]): Variable[] {
   });
 
   return [...variables].sort((a, b) => {
-    const scaleA = getGroupName(a.name);
-    const scaleB = getGroupName(b.name);
+    const scaleA = getScaleName(a.name);
+    const scaleB = getScaleName(b.name);
 
     const orderA = orderMap.has(scaleA) ? orderMap.get(scaleA)! : Infinity;
     const orderB = orderMap.has(scaleB) ? orderMap.get(scaleB)! : Infinity;
