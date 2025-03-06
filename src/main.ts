@@ -12,13 +12,16 @@ import {
 } from "./utils/transformColors";
 import { parseHex, parseRgba } from "./utils/parseColors";
 import {
-  createTitle,
-  createBodyText,
-  createColorSheet,
   createHStack,
   createVStack,
+  createTitle,
+  createBodyText,
+  createSolidColorSheet,
+  createScaleLabel,
   createSwatchFrame,
-} from "./utils/createFrames";
+  createAlphaColorSheet,
+  createCheckerboard,
+} from "./utils/createNodes";
 
 export default async function () {
   try {
@@ -27,6 +30,11 @@ export default async function () {
     const collectionNames = localCollections.map(
       (collection) => collection.name,
     );
+
+    const collection = localCollections[0];
+    const collectionId = localCollections[0].id;
+    const lightModeId = collection.modes[0].modeId;
+    const darkModeId = collection.modes[1].modeId;
 
     // -------------------------------------------------------------------------
     // Create variables
@@ -153,27 +161,26 @@ export default async function () {
     const notification = figma.notify("Creating color sheets…");
     await new Promise((resolve) => setTimeout(resolve, 100));
 
-    const solidColors = localColorVariables.filter(
+    const unsortedSolidColors = localColorVariables.filter(
       (variable) => !variable.name.includes("Alpha"),
     );
+    const solidColors = sortColors(unsortedSolidColors, scalesOrder);
 
-    const alphaColors = localColorVariables.filter(
+    const unsortedAlphaColors = localColorVariables.filter(
       (variable) =>
         variable.name.includes("Alpha") &&
         !variable.name.includes("Black") &&
         !variable.name.includes("White"),
     );
+    const alphaColors = sortColors(unsortedAlphaColors, scalesOrder);
 
     const blackWhiteColors = localColorVariables.filter(
       (variable) =>
         variable.name.includes("Black") || variable.name.includes("White"),
     );
 
-    const sortedSolidColors = sortColors(solidColors, scalesOrder);
-    const sortedAlphaColors = sortColors(alphaColors, scalesOrder);
-
     // -------------------------------------------------------------------------
-    // Colors for use in the file
+    // Colors for use in the "style guide"
 
     const colorGray1 = localColorVariables.find(
       (variable) => variable.name === "Solid/Gray/Gray 1",
@@ -194,156 +201,26 @@ export default async function () {
       (variable) => variable.name === "Solid/Gray/Gray 11",
     )!;
 
-    // -------------------------------------------------------------------------
     // Create sheet with solid colors
-    const solidColorsTitle = createTitle("Colors", colorTextPrimary);
-    const solidColorsSheet = createColorSheet("Colors");
-    solidColorsSheet.appendChild(solidColorsTitle);
-
-    const rowsWrapper = createVStack(gridSpacing);
-    rowsWrapper.name = "Colors";
-
-    const stepsWrapper = createHStack(gridSpacing);
-    stepsWrapper.name = "Steps";
-    stepsWrapper.paddingLeft = 120 + gridSpacing;
-
-    for (let i = 0; i < 12; i++) {
-      const stepLabelWrapper = figma.createFrame();
-      stepLabelWrapper.resize(swatchWidth, swatchHeight);
-      stepLabelWrapper.layoutMode = "HORIZONTAL";
-      stepLabelWrapper.layoutSizingHorizontal = "FIXED";
-      stepLabelWrapper.primaryAxisAlignItems = "CENTER";
-      stepLabelWrapper.counterAxisAlignItems = "CENTER";
-
-      const stepLabel = createBodyText((i + 1).toString(), colorTextSecondary);
-
-      stepLabelWrapper.appendChild(stepLabel);
-      stepsWrapper.appendChild(stepLabelWrapper);
-    }
-
-    rowsWrapper.appendChild(stepsWrapper);
-
-    // -------------------------------------------------------------------------
-    // Create solid color swatches
-
-    for (let i = 0; i < solidColors.length; i += 12) {
-      const row = createHStack(gridSpacing);
-      row.name = getScaleName(sortedSolidColors[i].name);
-
-      const rowLabelWrapper = figma.createFrame();
-      rowLabelWrapper.name = "Label";
-      rowLabelWrapper.layoutMode = "HORIZONTAL";
-      rowLabelWrapper.layoutSizingHorizontal = "FIXED";
-      rowLabelWrapper.counterAxisAlignItems = "CENTER";
-      rowLabelWrapper.resize(120, swatchHeight);
-      rowLabelWrapper.fills = [];
-
-      const rowLabel = createBodyText(
-        getScaleName(sortedSolidColors[i].name),
-        colorTextSecondary,
-      );
-
-      rowLabelWrapper.appendChild(rowLabel);
-      row.appendChild(rowLabelWrapper);
-
-      const rowColors = sortedSolidColors.slice(i, i + 12);
-      rowColors.forEach((color) => {
-        const swatch = figma.createFrame();
-        swatch.resize(swatchWidth, swatchHeight);
-        swatch.name = getColorName(color.name);
-        swatch.fills = [
-          figma.variables.setBoundVariableForPaint(
-            { type: "SOLID", color: { r: 0, g: 0, b: 0 } },
-            "color",
-            color,
-          ),
-        ];
-
-        row.appendChild(swatch);
-      });
-      rowsWrapper.appendChild(row);
-    }
-    solidColorsSheet.appendChild(rowsWrapper);
-
-    // -------------------------------------------------------------------------
-    // Create sheet with transparent colors
-
-    const alphaColorsTitle = createTitle(
-      "Transparent colors",
+    const solidColorsSheet = createSolidColorSheet(
+      "Colors",
+      solidColors,
       colorTextPrimary,
+      colorTextSecondary,
     );
-    const alphaColorsSheet = createColorSheet("Transparent colors");
-    alphaColorsSheet.appendChild(alphaColorsTitle);
+
+    // Create sheet with transparent colors
+    const alphaColorsSheet = createAlphaColorSheet(
+      "Transparent colors",
+      alphaColors,
+      colorTextPrimary,
+      colorTextSecondary,
+      colorCheckerboardTileBase,
+      colorCheckerboardTileContrast,
+    );
     alphaColorsSheet.x = solidColorsSheet.width + 128;
 
-    // -------------------------------------------------------------------------
-    // Create checkerboard pattern
-
-    const createCheckerboard = (parent: FrameNode) => {
-      const createCheckerboardTile = () => {
-        const tile = figma.createRectangle();
-        tile.resize(8, 8);
-
-        return tile;
-      };
-
-      const tiles = [];
-
-      for (let rowIndex = 0; rowIndex < 7; rowIndex++) {
-        for (let tileIndex = 0; tileIndex < 7; tileIndex++) {
-          const tile = createCheckerboardTile();
-          // Space between tiles (8px for tile itself, 8px for space between tile)
-          // Increase with the current tile index
-          let baseHSpacing = tileIndex * 16;
-          // Add 8px space if row index is an even number
-          tile.x = (rowIndex + 1) % 2 === 0 ? baseHSpacing + 8 : baseHSpacing;
-          // Vertical spacing (8px row height, 0px space between rows)
-          // Increase with current row index
-          tile.y = rowIndex * 8;
-          tiles.push(tile);
-        }
-      }
-
-      const checkerboard = figma.union(tiles, parent);
-      checkerboard.name = "Checkerboard";
-      checkerboard.locked = true;
-      checkerboard.fills = [
-        figma.variables.setBoundVariableForPaint(
-          { type: "SOLID", color: { r: 0, g: 0, b: 0 } },
-          "color",
-          colorCheckerboardTileContrast,
-        ),
-      ];
-      return checkerboard;
-    };
-
-    // -------------------------------------------------------------------------
-    // Create transparent color swatches
-
-    const alphaRowsWrapper = createVStack(gridSpacing);
-    alphaRowsWrapper.name = "Transparent colors";
-
-    for (let i = 0; i < alphaColors.length; i += 12) {
-      const row = createHStack(gridSpacing);
-      row.name = getScaleName(sortedAlphaColors[i].name);
-      const scaleColors = sortedAlphaColors.slice(i, i + 12);
-
-      scaleColors.forEach((color) => {
-        const swatchWrapper = createSwatchFrame(
-          colorCheckerboardTileBase,
-          "Wrapper",
-        );
-        const swatch = createSwatchFrame(color, getColorName(color.name));
-        const checkerboard = createCheckerboard(swatchWrapper);
-        swatchWrapper.appendChild(checkerboard);
-        swatchWrapper.appendChild(swatch);
-        row.appendChild(swatchWrapper);
-      });
-
-      alphaRowsWrapper.appendChild(row);
-    }
-    alphaColorsSheet.appendChild(alphaRowsWrapper);
-
+    // Create section with black and white colors
     const bwWrapper = createVStack(gridSpacing);
     bwWrapper.name = "Shadows, highlights, and overlays";
 
@@ -365,6 +242,7 @@ export default async function () {
 
     const bwStepsWrapper = createHStack(gridSpacing);
     bwStepsWrapper.name = "Steps";
+    bwStepsWrapper.paddingLeft = 120 + 8;
 
     for (let i = 0; i < 12; i++) {
       const stepLabelWrapper = figma.createFrame();
@@ -383,9 +261,7 @@ export default async function () {
 
     bwWrapper.appendChild(bwStepsWrapper);
 
-    // -------------------------------------------------------------------------
     // Create black and white transparent color swatches
-
     for (let i = 0; i < blackWhiteColors.length; i += 12) {
       const row = figma.createFrame();
       row.name = getScaleName(blackWhiteColors[i].name);
@@ -395,6 +271,12 @@ export default async function () {
       row.itemSpacing = gridSpacing;
       row.fills = [];
 
+      const scaleLabel = createScaleLabel(
+        getScaleName(blackWhiteColors[i].name),
+        colorTextSecondary,
+      );
+      row.appendChild(scaleLabel);
+
       const scaleColors = blackWhiteColors.slice(i, i + 12);
 
       scaleColors.forEach((color) => {
@@ -403,7 +285,10 @@ export default async function () {
           "Wrapper",
         );
         const swatch = createSwatchFrame(color, getColorName(color.name));
-        const checkerboard = createCheckerboard(swatchWrapper);
+        const checkerboard = createCheckerboard(
+          colorCheckerboardTileContrast,
+          swatchWrapper,
+        );
         swatchWrapper.appendChild(checkerboard);
         swatchWrapper.appendChild(swatch);
         row.appendChild(swatchWrapper);
