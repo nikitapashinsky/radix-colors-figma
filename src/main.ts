@@ -1,17 +1,16 @@
 import * as allColors from "./colors/values";
+import { descriptions } from "./colors/descriptions";
+import { scalesOrder } from "./colors/scalesOrder";
 import {
   capitalize,
   createVariableName,
   createWebSyntax,
-  parseHex,
-  parseRgba,
   getScaleName,
   getColorName,
   sortColors,
   sortColorStrings,
-} from "./utils/generic";
-import { descriptions } from "./colors/descriptions";
-import { scalesOrder } from "./colors/scalesOrder";
+} from "./utils/transformColors";
+import { parseHex, parseRgba } from "./utils/parseColors";
 import {
   createTitle,
   createBodyText,
