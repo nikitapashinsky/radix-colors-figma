@@ -1,3 +1,4 @@
+import { SWATCH_WIDTH, SWATCH_HEIGHT, SPACING } from "./constants";
 import { getScaleName, getColorName } from "./transformColors";
 
 export const createVStack = (
@@ -17,11 +18,15 @@ export const createVStack = (
 
 export const createHStack = (
   spacing: number = 0,
+  alignItemsHorizontal: AutoLayoutMixin["primaryAxisAlignItems"] = "CENTER",
+  alignItemsVertical: AutoLayoutMixin["counterAxisAlignItems"] = "CENTER",
   sizingVertical: LayoutMixin["layoutSizingVertical"] = "HUG",
   sizingHorizontal: LayoutMixin["layoutSizingHorizontal"] = "HUG",
 ): FrameNode => {
   const hstack = figma.createFrame();
   hstack.layoutMode = "HORIZONTAL";
+  hstack.primaryAxisAlignItems = alignItemsHorizontal;
+  hstack.counterAxisAlignItems = alignItemsVertical;
   hstack.layoutSizingVertical = sizingVertical;
   hstack.layoutSizingHorizontal = sizingHorizontal;
   hstack.itemSpacing = spacing;
@@ -50,6 +55,7 @@ export const createSolidColorSheet = (
 
   const title = createTitle(name, titleTextColor);
   const titleWrapper = createVStack(24);
+  titleWrapper.name = "Header";
   const description = createBodyText(
     "Each step is designed with a specific use case in mind, such as backgrounds, hover states, borders, overlays, or text.",
     bodyTextColor,
@@ -62,21 +68,76 @@ export const createSolidColorSheet = (
   titleWrapper.layoutSizingHorizontal = "FILL";
   description.maxWidth = 640;
 
-  const rowsWrapper = createVStack(8);
+  const rowsWrapper = createVStack(SPACING);
   rowsWrapper.name = "Colors";
 
-  const stepsWrapper = createHStack(8);
+  const stepGroupsWrapper = createHStack(SPACING);
+  stepGroupsWrapper.name = "Step groups";
+  stepGroupsWrapper.paddingLeft = 120 + SPACING;
+  stepGroupsWrapper.clipsContent = false;
+
+  const backgroundsWrapper = createHStack();
+  backgroundsWrapper.resize(SWATCH_WIDTH * 2 + SPACING, SWATCH_HEIGHT);
+  backgroundsWrapper.strokes = [figma.util.solidPaint("#0000000d")];
+  backgroundsWrapper.strokeAlign = "OUTSIDE";
+  backgroundsWrapper.strokeBottomWeight = 1;
+  backgroundsWrapper.appendChild(createBodyText("Backgrounds", bodyTextColor));
+
+  const componentsWrapper = createHStack();
+  componentsWrapper.resize(SWATCH_WIDTH * 3 + SPACING * 2, SWATCH_HEIGHT);
+  componentsWrapper.strokes = [figma.util.solidPaint("#0000000d")];
+  componentsWrapper.strokeAlign = "OUTSIDE";
+  componentsWrapper.strokeBottomWeight = 1;
+  componentsWrapper.appendChild(
+    createBodyText("Interactive components", bodyTextColor),
+  );
+
+  const bordersWrapper = createHStack();
+  bordersWrapper.resize(SWATCH_WIDTH * 3 + SPACING * 2, SWATCH_HEIGHT);
+  bordersWrapper.strokes = [figma.util.solidPaint("#0000000d")];
+  bordersWrapper.strokeAlign = "OUTSIDE";
+  bordersWrapper.strokeBottomWeight = 1;
+  bordersWrapper.appendChild(
+    createBodyText("Borders and separators", bodyTextColor),
+  );
+
+  const solidColorsWrapper = createHStack();
+  solidColorsWrapper.resize(SWATCH_WIDTH * 2 + SPACING, SWATCH_HEIGHT);
+  solidColorsWrapper.strokes = [figma.util.solidPaint("#0000000d")];
+  solidColorsWrapper.strokeAlign = "OUTSIDE";
+  solidColorsWrapper.strokeBottomWeight = 1;
+  solidColorsWrapper.appendChild(createBodyText("Solid colors", bodyTextColor));
+
+  const accessibleTextWrapper = createHStack();
+  accessibleTextWrapper.resize(SWATCH_WIDTH * 2 + SPACING, SWATCH_HEIGHT);
+  accessibleTextWrapper.strokes = [figma.util.solidPaint("#0000000d")];
+  accessibleTextWrapper.strokeAlign = "OUTSIDE";
+  accessibleTextWrapper.strokeBottomWeight = 1;
+  accessibleTextWrapper.appendChild(
+    createBodyText("Accessible text", bodyTextColor),
+  );
+
+  stepGroupsWrapper.appendChild(backgroundsWrapper);
+  stepGroupsWrapper.appendChild(componentsWrapper);
+  stepGroupsWrapper.appendChild(bordersWrapper);
+  stepGroupsWrapper.appendChild(solidColorsWrapper);
+  stepGroupsWrapper.appendChild(accessibleTextWrapper);
+
+  rowsWrapper.appendChild(stepGroupsWrapper);
+
+  const stepsWrapper = createHStack(SPACING);
   stepsWrapper.name = "Steps";
-  stepsWrapper.paddingLeft = 120 + 8;
+  stepsWrapper.paddingLeft = 120 + SPACING;
 
   for (let i = 0; i < 12; i++) {
     const stepLabelWrapper = figma.createFrame();
     stepLabelWrapper.name = (i + 1).toString();
-    stepLabelWrapper.resize(96, 48);
+    stepLabelWrapper.resize(SWATCH_WIDTH, SWATCH_HEIGHT);
     stepLabelWrapper.layoutMode = "HORIZONTAL";
     stepLabelWrapper.layoutSizingHorizontal = "FIXED";
     stepLabelWrapper.primaryAxisAlignItems = "CENTER";
     stepLabelWrapper.counterAxisAlignItems = "CENTER";
+    stepLabelWrapper.fills = [];
 
     const stepLabel = createBodyText((i + 1).toString(), bodyTextColor);
 
@@ -87,7 +148,7 @@ export const createSolidColorSheet = (
   rowsWrapper.appendChild(stepsWrapper);
 
   for (let i = 0; i < scalesArray.length; i += 12) {
-    const row = createHStack(8);
+    const row = createHStack(SPACING);
     row.name = getScaleName(scalesArray[i].name);
     const scaleLabel = createScaleLabel(
       getScaleName(scalesArray[i].name),
@@ -124,10 +185,10 @@ export const createCheckerboard = (tileColor: Variable, parent: FrameNode) => {
       // Increase with the current tile index
       let baseHSpacing = tileIndex * 16;
       // Add 8px space if row index is an even number
-      tile.x = (rowIndex + 1) % 2 === 0 ? baseHSpacing + 8 : baseHSpacing;
+      tile.x = (rowIndex + 1) % 2 === 0 ? baseHSpacing + SPACING : baseHSpacing;
       // Vertical spacing (8px row height, 0px space between rows)
       // Increase with current row index
-      tile.y = rowIndex * 8;
+      tile.y = rowIndex * SPACING;
       tiles.push(tile);
     }
   }
@@ -167,6 +228,7 @@ export const createAlphaColorSheet = (
 
   const title = createTitle(name, titleTextColor);
   const titleWrapper = createVStack(24);
+  titleWrapper.name = "Header";
   const description = createBodyText(
     "Each scale has a matching alpha color variant, which is handy for UI components that need to blend into colored backgrounds.",
     bodyTextColor,
@@ -179,21 +241,76 @@ export const createAlphaColorSheet = (
   titleWrapper.layoutSizingHorizontal = "FILL";
   description.maxWidth = 640;
 
-  const rowsWrapper = createVStack(8);
+  const rowsWrapper = createVStack(SPACING);
   rowsWrapper.name = "Colors";
 
-  const stepsWrapper = createHStack(8);
+  const stepGroupsWrapper = createHStack(SPACING);
+  stepGroupsWrapper.name = "Step groups";
+  stepGroupsWrapper.paddingLeft = 120 + SPACING;
+  stepGroupsWrapper.clipsContent = false;
+
+  const backgroundsWrapper = createHStack();
+  backgroundsWrapper.resize(SWATCH_WIDTH * 2 + SPACING, SWATCH_HEIGHT);
+  backgroundsWrapper.strokes = [figma.util.solidPaint("#0000000d")];
+  backgroundsWrapper.strokeAlign = "OUTSIDE";
+  backgroundsWrapper.strokeBottomWeight = 1;
+  backgroundsWrapper.appendChild(createBodyText("Backgrounds", bodyTextColor));
+
+  const componentsWrapper = createHStack();
+  componentsWrapper.resize(SWATCH_WIDTH * 3 + SPACING * 2, SWATCH_HEIGHT);
+  componentsWrapper.strokes = [figma.util.solidPaint("#0000000d")];
+  componentsWrapper.strokeAlign = "OUTSIDE";
+  componentsWrapper.strokeBottomWeight = 1;
+  componentsWrapper.appendChild(
+    createBodyText("Interactive components", bodyTextColor),
+  );
+
+  const bordersWrapper = createHStack();
+  bordersWrapper.resize(SWATCH_WIDTH * 3 + SPACING * 2, SWATCH_HEIGHT);
+  bordersWrapper.strokes = [figma.util.solidPaint("#0000000d")];
+  bordersWrapper.strokeAlign = "OUTSIDE";
+  bordersWrapper.strokeBottomWeight = 1;
+  bordersWrapper.appendChild(
+    createBodyText("Borders and separators", bodyTextColor),
+  );
+
+  const solidColorsWrapper = createHStack();
+  solidColorsWrapper.resize(SWATCH_WIDTH * 2 + SPACING, SWATCH_HEIGHT);
+  solidColorsWrapper.strokes = [figma.util.solidPaint("#0000000d")];
+  solidColorsWrapper.strokeAlign = "OUTSIDE";
+  solidColorsWrapper.strokeBottomWeight = 1;
+  solidColorsWrapper.appendChild(createBodyText("Solid colors", bodyTextColor));
+
+  const accessibleTextWrapper = createHStack();
+  accessibleTextWrapper.resize(SWATCH_WIDTH * 2 + SPACING, SWATCH_HEIGHT);
+  accessibleTextWrapper.strokes = [figma.util.solidPaint("#0000000d")];
+  accessibleTextWrapper.strokeAlign = "OUTSIDE";
+  accessibleTextWrapper.strokeBottomWeight = 1;
+  accessibleTextWrapper.appendChild(
+    createBodyText("Accessible text", bodyTextColor),
+  );
+
+  stepGroupsWrapper.appendChild(backgroundsWrapper);
+  stepGroupsWrapper.appendChild(componentsWrapper);
+  stepGroupsWrapper.appendChild(bordersWrapper);
+  stepGroupsWrapper.appendChild(solidColorsWrapper);
+  stepGroupsWrapper.appendChild(accessibleTextWrapper);
+
+  rowsWrapper.appendChild(stepGroupsWrapper);
+
+  const stepsWrapper = createHStack(SPACING);
   stepsWrapper.name = "Steps";
-  stepsWrapper.paddingLeft = 120 + 8;
+  stepsWrapper.paddingLeft = 120 + SPACING;
 
   for (let i = 0; i < 12; i++) {
     const stepLabelWrapper = figma.createFrame();
     stepLabelWrapper.name = (i + 1).toString();
-    stepLabelWrapper.resize(96, 48);
+    stepLabelWrapper.resize(SWATCH_WIDTH, SWATCH_HEIGHT);
     stepLabelWrapper.layoutMode = "HORIZONTAL";
     stepLabelWrapper.layoutSizingHorizontal = "FIXED";
     stepLabelWrapper.primaryAxisAlignItems = "CENTER";
     stepLabelWrapper.counterAxisAlignItems = "CENTER";
+    stepLabelWrapper.fills = [];
 
     const stepLabel = createBodyText((i + 1).toString(), bodyTextColor);
 
@@ -204,7 +321,7 @@ export const createAlphaColorSheet = (
   rowsWrapper.appendChild(stepsWrapper);
 
   for (let i = 0; i < scalesArray.length; i += 12) {
-    const row = createHStack(8);
+    const row = createHStack(SPACING);
     row.name = getScaleName(scalesArray[i].name);
     const scaleLabel = createScaleLabel(
       getScaleName(scalesArray[i].name),
@@ -272,7 +389,7 @@ export const createScaleLabel = (
   labelWrapper.layoutMode = "HORIZONTAL";
   labelWrapper.layoutSizingHorizontal = "FIXED";
   labelWrapper.counterAxisAlignItems = "CENTER";
-  labelWrapper.resize(120, 48);
+  labelWrapper.resize(120, SWATCH_HEIGHT);
   labelWrapper.fills = [];
 
   const label = createBodyText(scaleName, color);
@@ -285,7 +402,7 @@ export const createScaleLabel = (
 export const createSwatchFrame = (fill: Variable, name?: string): FrameNode => {
   const swatchWrapper = figma.createFrame();
   name ? (swatchWrapper.name = name) : null;
-  swatchWrapper.resize(96, 48);
+  swatchWrapper.resize(SWATCH_WIDTH, SWATCH_HEIGHT);
   swatchWrapper.fills = [
     figma.variables.setBoundVariableForPaint(
       { type: "SOLID", color: { r: 0, g: 0, b: 0 } },

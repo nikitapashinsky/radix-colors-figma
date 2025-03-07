@@ -1,6 +1,6 @@
-import * as allColors from "./colors/values";
-import { descriptions } from "./colors/descriptions";
-import { scalesOrder } from "./colors/scalesOrder";
+import * as allColors from "./data/scales";
+import { descriptions } from "./data/descriptions";
+import { scalesOrder } from "./data/scalesOrder";
 import {
   capitalize,
   createVariableName,
@@ -10,6 +10,7 @@ import {
   sortColors,
   sortColorStrings,
 } from "./utils/transformColors";
+import { SWATCH_WIDTH, SWATCH_HEIGHT, SPACING } from "./utils/constants";
 import { parseHex, parseRgba } from "./utils/parseColors";
 import {
   createHStack,
@@ -27,25 +28,22 @@ export default async function () {
   try {
     const localCollections =
       await figma.variables.getLocalVariableCollectionsAsync();
+
     const collectionNames = localCollections.map(
       (collection) => collection.name,
     );
-
-    const collection = localCollections[0];
-    const collectionId = localCollections[0].id;
-    const lightModeId = collection.modes[0].modeId;
-    const darkModeId = collection.modes[1].modeId;
 
     // -------------------------------------------------------------------------
     // Create variables
     // -------------------------------------------------------------------------
 
-    if (!collectionNames.includes("Colors")) {
+    if (!collectionNames.includes("Radix Colors")) {
       const notification = figma.notify("Generating color variables…");
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Create a variable collection "Colors" with two modes: "Light" and "Dark"
-      const collection = figma.variables.createVariableCollection("Colors");
+      const collection =
+        figma.variables.createVariableCollection("Radix Colors");
       collection.renameMode(collection.modes[0].modeId, "Light");
       const lightModeId = collection.modes[0].modeId;
       const darkModeId = collection.addMode("Dark");
@@ -148,40 +146,35 @@ export default async function () {
     await figma.loadFontAsync({ family: "Inter", style: "Regular" });
     await figma.loadFontAsync({ family: "Inter", style: "Semi Bold" });
 
-    const swatchWidth = 96;
-    const swatchHeight = 48;
-    const gridSpacing = 8;
-
-    // -------------------------------------------------------------------------
-    // Get and sort local color variables
+    const notification = figma.notify("Creating color sheets…");
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     const localColorVariables =
       await figma.variables.getLocalVariablesAsync("COLOR");
 
-    const notification = figma.notify("Creating color sheets…");
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    const isSolidColor = (variable: { name: string }) =>
+      !variable.name.includes("Alpha");
 
-    const unsortedSolidColors = localColorVariables.filter(
-      (variable) => !variable.name.includes("Alpha"),
-    );
-    const solidColors = sortColors(unsortedSolidColors, scalesOrder);
+    const isAlphaColor = (variable: { name: string }) =>
+      variable.name.includes("Alpha") &&
+      !variable.name.includes("Black") &&
+      !variable.name.includes("White");
 
-    const unsortedAlphaColors = localColorVariables.filter(
-      (variable) =>
-        variable.name.includes("Alpha") &&
-        !variable.name.includes("Black") &&
-        !variable.name.includes("White"),
+    const solidColors = sortColors(
+      localColorVariables.filter(isSolidColor),
+      scalesOrder,
     );
-    const alphaColors = sortColors(unsortedAlphaColors, scalesOrder);
+
+    const alphaColors = sortColors(
+      localColorVariables.filter(isAlphaColor),
+      scalesOrder,
+    );
 
     const blackWhiteColors = localColorVariables.filter(
-      (variable) =>
-        variable.name.includes("Black") || variable.name.includes("White"),
+      (variable) => !isSolidColor(variable) && !isAlphaColor(variable),
     );
 
-    // -------------------------------------------------------------------------
     // Colors for use in the "style guide"
-
     const colorGray1 = localColorVariables.find(
       (variable) => variable.name === "Solid/Gray/Gray 1",
     )!;
@@ -221,10 +214,10 @@ export default async function () {
     alphaColorsSheet.x = solidColorsSheet.width + 128;
 
     // Create section with black and white colors
-    const bwWrapper = createVStack(gridSpacing);
+    const bwWrapper = createVStack(SPACING);
     bwWrapper.name = "Shadows, highlights, and overlays";
 
-    const bwHeaderWrapper = createHStack(gridSpacing);
+    const bwHeaderWrapper = createHStack(SPACING);
     bwHeaderWrapper.name = "Header";
     bwHeaderWrapper.counterAxisAlignItems = "CENTER";
     bwHeaderWrapper.primaryAxisAlignItems = "CENTER";
@@ -240,18 +233,19 @@ export default async function () {
     bwWrapper.appendChild(bwHeaderWrapper);
     bwHeaderWrapper.layoutSizingHorizontal = "FILL";
 
-    const bwStepsWrapper = createHStack(gridSpacing);
+    const bwStepsWrapper = createHStack(SPACING);
     bwStepsWrapper.name = "Steps";
     bwStepsWrapper.paddingLeft = 120 + 8;
 
     for (let i = 0; i < 12; i++) {
       const stepLabelWrapper = figma.createFrame();
       stepLabelWrapper.name = (i + 1).toString();
-      stepLabelWrapper.resize(swatchWidth, swatchHeight);
+      stepLabelWrapper.resize(SWATCH_WIDTH, SWATCH_HEIGHT);
       stepLabelWrapper.layoutMode = "HORIZONTAL";
       stepLabelWrapper.layoutSizingHorizontal = "FIXED";
       stepLabelWrapper.primaryAxisAlignItems = "CENTER";
       stepLabelWrapper.counterAxisAlignItems = "CENTER";
+      stepLabelWrapper.fills = [];
 
       const stepLabel = createBodyText((i + 1).toString(), colorTextSecondary);
 
@@ -268,7 +262,7 @@ export default async function () {
       row.layoutMode = "HORIZONTAL";
       row.layoutSizingHorizontal = "HUG";
       row.layoutSizingVertical = "HUG";
-      row.itemSpacing = gridSpacing;
+      row.itemSpacing = SPACING;
       row.fills = [];
 
       const scaleLabel = createScaleLabel(
