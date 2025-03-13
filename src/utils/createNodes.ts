@@ -78,14 +78,40 @@ export const createSolidColorSheet = (
 
   const backgroundsWrapper = createHStack();
   backgroundsWrapper.resize(SWATCH_WIDTH * 2 + SPACING, SWATCH_HEIGHT);
-  backgroundsWrapper.strokes = [figma.util.solidPaint("#0000000d")];
+  backgroundsWrapper.strokes = [
+    {
+      type: "GRADIENT_LINEAR",
+      gradientTransform: [
+        [1, 0, 0],
+        [0, 1, 0],
+      ],
+      gradientStops: [
+        { position: 0, color: { r: 0, g: 0, b: 0, a: 0 } },
+        { position: 0.5, color: { r: 0, g: 0, b: 0, a: 0.1 } },
+        { position: 1, color: { r: 0, g: 0, b: 0, a: 0 } },
+      ],
+    },
+  ];
   backgroundsWrapper.strokeAlign = "OUTSIDE";
   backgroundsWrapper.strokeBottomWeight = 1;
   backgroundsWrapper.appendChild(createBodyText("Backgrounds", bodyTextColor));
 
   const componentsWrapper = createHStack();
   componentsWrapper.resize(SWATCH_WIDTH * 3 + SPACING * 2, SWATCH_HEIGHT);
-  componentsWrapper.strokes = [figma.util.solidPaint("#0000000d")];
+  componentsWrapper.strokes = [
+    {
+      type: "GRADIENT_LINEAR",
+      gradientTransform: [
+        [1, 0, 0],
+        [0, 1, 0],
+      ],
+      gradientStops: [
+        { position: 0, color: { r: 0, g: 0, b: 0, a: 0 } },
+        { position: 0.5, color: { r: 0, g: 0, b: 0, a: 0.1 } },
+        { position: 1, color: { r: 0, g: 0, b: 0, a: 0 } },
+      ],
+    },
+  ];
   componentsWrapper.strokeAlign = "OUTSIDE";
   componentsWrapper.strokeBottomWeight = 1;
   componentsWrapper.appendChild(
@@ -94,7 +120,20 @@ export const createSolidColorSheet = (
 
   const bordersWrapper = createHStack();
   bordersWrapper.resize(SWATCH_WIDTH * 3 + SPACING * 2, SWATCH_HEIGHT);
-  bordersWrapper.strokes = [figma.util.solidPaint("#0000000d")];
+  bordersWrapper.strokes = [
+    {
+      type: "GRADIENT_LINEAR",
+      gradientTransform: [
+        [1, 0, 0],
+        [0, 1, 0],
+      ],
+      gradientStops: [
+        { position: 0, color: { r: 0, g: 0, b: 0, a: 0 } },
+        { position: 0.5, color: { r: 0, g: 0, b: 0, a: 0.1 } },
+        { position: 1, color: { r: 0, g: 0, b: 0, a: 0 } },
+      ],
+    },
+  ];
   bordersWrapper.strokeAlign = "OUTSIDE";
   bordersWrapper.strokeBottomWeight = 1;
   bordersWrapper.appendChild(
@@ -103,14 +142,40 @@ export const createSolidColorSheet = (
 
   const solidColorsWrapper = createHStack();
   solidColorsWrapper.resize(SWATCH_WIDTH * 2 + SPACING, SWATCH_HEIGHT);
-  solidColorsWrapper.strokes = [figma.util.solidPaint("#0000000d")];
+  solidColorsWrapper.strokes = [
+    {
+      type: "GRADIENT_LINEAR",
+      gradientTransform: [
+        [1, 0, 0],
+        [0, 1, 0],
+      ],
+      gradientStops: [
+        { position: 0, color: { r: 0, g: 0, b: 0, a: 0 } },
+        { position: 0.5, color: { r: 0, g: 0, b: 0, a: 0.1 } },
+        { position: 1, color: { r: 0, g: 0, b: 0, a: 0 } },
+      ],
+    },
+  ];
   solidColorsWrapper.strokeAlign = "OUTSIDE";
   solidColorsWrapper.strokeBottomWeight = 1;
   solidColorsWrapper.appendChild(createBodyText("Solid colors", bodyTextColor));
 
   const accessibleTextWrapper = createHStack();
   accessibleTextWrapper.resize(SWATCH_WIDTH * 2 + SPACING, SWATCH_HEIGHT);
-  accessibleTextWrapper.strokes = [figma.util.solidPaint("#0000000d")];
+  accessibleTextWrapper.strokes = [
+    {
+      type: "GRADIENT_LINEAR",
+      gradientTransform: [
+        [1, 0, 0],
+        [0, 1, 0],
+      ],
+      gradientStops: [
+        { position: 0, color: { r: 0, g: 0, b: 0, a: 0 } },
+        { position: 0.5, color: { r: 0, g: 0, b: 0, a: 0.1 } },
+        { position: 1, color: { r: 0, g: 0, b: 0, a: 0 } },
+      ],
+    },
+  ];
   accessibleTextWrapper.strokeAlign = "OUTSIDE";
   accessibleTextWrapper.strokeBottomWeight = 1;
   accessibleTextWrapper.appendChild(

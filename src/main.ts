@@ -15,7 +15,6 @@ import { parseHex, parseRgba } from "./utils/parseColors";
 import {
   createHStack,
   createVStack,
-  createTitle,
   createBodyText,
   createSolidColorSheet,
   createScaleLabel,
@@ -134,6 +133,9 @@ export default async function () {
             variable.setValueForMode(lightModeId, parseRgba(value));
             variable.setValueForMode(darkModeId, parseRgba(value));
             variable.setVariableCodeSyntax("WEB", createWebSyntax(name));
+            variable.description = name.includes("black")
+              ? "Shadows and overlays"
+              : "Highlights and overlays";
           });
         });
       notification.cancel();
