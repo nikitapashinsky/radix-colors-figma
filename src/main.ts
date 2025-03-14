@@ -21,6 +21,7 @@ import {
   createSwatchFrame,
   createAlphaColorSheet,
   createCheckerboard,
+  createGradientBorder,
 } from "./utils/createNodes";
 
 export default async function () {
@@ -32,11 +33,15 @@ export default async function () {
       (collection) => collection.name,
     );
 
+    const collection = localCollections.find(
+      (collection) => (collection.name = "Radix Colors"),
+    );
+
     // -------------------------------------------------------------------------
     // Create variables
     // -------------------------------------------------------------------------
 
-    if (!collectionNames.includes("Radix Colors")) {
+    if (!collection) {
       const notification = figma.notify("Generating color variables…");
       await new Promise((resolve) => setTimeout(resolve, 100));
 
@@ -145,155 +150,111 @@ export default async function () {
     // Render color sample sheets
     // -------------------------------------------------------------------------
 
-    await figma.loadFontAsync({ family: "Inter", style: "Regular" });
-    await figma.loadFontAsync({ family: "Inter", style: "Semi Bold" });
+    if (collection) {
+      const darkModeId = collection.modes[1].modeId;
+      await figma.loadFontAsync({ family: "Inter", style: "Regular" });
+      await figma.loadFontAsync({ family: "Inter", style: "Semi Bold" });
 
-    const notification = figma.notify("Creating color sheets…");
-    await new Promise((resolve) => setTimeout(resolve, 100));
+      const notification = figma.notify("Creating color sheets…");
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
-    const localColorVariables =
-      await figma.variables.getLocalVariablesAsync("COLOR");
+      const localColorVariables =
+        await figma.variables.getLocalVariablesAsync("COLOR");
 
-    const isSolidColor = (variable: { name: string }) =>
-      !variable.name.includes("Alpha");
+      const isSolidColor = (variable: { name: string }) =>
+        !variable.name.includes("Alpha");
 
-    const isAlphaColor = (variable: { name: string }) =>
-      variable.name.includes("Alpha") &&
-      !variable.name.includes("Black") &&
-      !variable.name.includes("White");
+      const isAlphaColor = (variable: { name: string }) =>
+        variable.name.includes("Alpha") &&
+        !variable.name.includes("Black") &&
+        !variable.name.includes("White");
 
-    const solidColors = sortColors(
-      localColorVariables.filter(isSolidColor),
-      scalesOrder,
-    );
+      const solidColors = sortColors(
+        localColorVariables.filter(isSolidColor),
+        scalesOrder,
+      );
 
-    const alphaColors = sortColors(
-      localColorVariables.filter(isAlphaColor),
-      scalesOrder,
-    );
+      const alphaColors = sortColors(
+        localColorVariables.filter(isAlphaColor),
+        scalesOrder,
+      );
 
-    const blackWhiteColors = localColorVariables.filter(
-      (variable) => !isSolidColor(variable) && !isAlphaColor(variable),
-    );
+      const blackWhiteColors = localColorVariables.filter(
+        (variable) => !isSolidColor(variable) && !isAlphaColor(variable),
+      );
 
-    // Colors for use in the "style guide"
-    const colorGray1 = localColorVariables.find(
-      (variable) => variable.name === "Solid/Gray/Gray 1",
-    )!;
+      // Colors for use in the "style guide"
+      const colorGray1 = localColorVariables.find(
+        (variable) => variable.name === "Solid/Gray/Gray 1",
+      )!;
 
-    const colorGray5 = localColorVariables.find(
-      (variable) => variable.name === "Solid/Gray/Gray 5",
-    )!;
+      const colorGray5 = localColorVariables.find(
+        (variable) => variable.name === "Solid/Gray/Gray 5",
+      )!;
 
-    const colorCheckerboardTileContrast = colorGray5;
-    const colorCheckerboardTileBase = colorGray1;
+      const colorCheckerboardTileContrast = colorGray5;
+      const colorCheckerboardTileBase = colorGray1;
 
-    const colorTextPrimary = localColorVariables.find(
-      (variable) => variable.name === "Solid/Gray/Gray 12",
-    )!;
+      const colorTextPrimary = localColorVariables.find(
+        (variable) => variable.name === "Solid/Gray/Gray 12",
+      )!;
 
-    const colorTextSecondary = localColorVariables.find(
-      (variable) => variable.name === "Solid/Gray/Gray 11",
-    )!;
+      const colorTextSecondary = localColorVariables.find(
+        (variable) => variable.name === "Solid/Gray/Gray 11",
+      )!;
 
-    // Create sheet with solid colors
-    const solidColorsSheet = createSolidColorSheet(
-      "Colors",
-      solidColors,
-      colorTextPrimary,
-      colorTextSecondary,
-    );
-
-    // Create sheet with transparent colors
-    const alphaColorsSheet = createAlphaColorSheet(
-      "Transparent colors",
-      alphaColors,
-      colorTextPrimary,
-      colorTextSecondary,
-      colorCheckerboardTileBase,
-      colorCheckerboardTileContrast,
-    );
-    alphaColorsSheet.x = solidColorsSheet.width + 128;
-
-    // Create section with black and white colors
-    const bwWrapper = createVStack(SPACING);
-    bwWrapper.name = "Shadows, highlights, and overlays";
-
-    const bwHeaderWrapper = createHStack(SPACING);
-    bwHeaderWrapper.name = "Header";
-    bwHeaderWrapper.counterAxisAlignItems = "CENTER";
-    bwHeaderWrapper.primaryAxisAlignItems = "CENTER";
-    bwHeaderWrapper.paddingTop = 16;
-    bwHeaderWrapper.paddingBottom = 16;
-
-    const bwHeaderTitle = createBodyText(
-      "Shadows, highlights, and overlays",
-      colorTextSecondary,
-    );
-
-    bwHeaderWrapper.appendChild(bwHeaderTitle);
-    bwWrapper.appendChild(bwHeaderWrapper);
-    bwHeaderWrapper.layoutSizingHorizontal = "FILL";
-
-    const bwStepsWrapper = createHStack(SPACING);
-    bwStepsWrapper.name = "Steps";
-    bwStepsWrapper.paddingLeft = 120 + 8;
-
-    for (let i = 0; i < 12; i++) {
-      const stepLabelWrapper = figma.createFrame();
-      stepLabelWrapper.name = (i + 1).toString();
-      stepLabelWrapper.resize(SWATCH_WIDTH, SWATCH_HEIGHT);
-      stepLabelWrapper.layoutMode = "HORIZONTAL";
-      stepLabelWrapper.layoutSizingHorizontal = "FIXED";
-      stepLabelWrapper.primaryAxisAlignItems = "CENTER";
-      stepLabelWrapper.counterAxisAlignItems = "CENTER";
-      stepLabelWrapper.fills = [];
-
-      const stepLabel = createBodyText((i + 1).toString(), colorTextSecondary);
-
-      stepLabelWrapper.appendChild(stepLabel);
-      bwStepsWrapper.appendChild(stepLabelWrapper);
-    }
-
-    bwWrapper.appendChild(bwStepsWrapper);
-
-    // Create black and white transparent color swatches
-    for (let i = 0; i < blackWhiteColors.length; i += 12) {
-      const row = figma.createFrame();
-      row.name = getScaleName(blackWhiteColors[i].name);
-      row.layoutMode = "HORIZONTAL";
-      row.layoutSizingHorizontal = "HUG";
-      row.layoutSizingVertical = "HUG";
-      row.itemSpacing = SPACING;
-      row.fills = [];
-
-      const scaleLabel = createScaleLabel(
-        getScaleName(blackWhiteColors[i].name),
+      // Create sheet with solid colors
+      const solidColorsSheet = createSolidColorSheet(
+        "Colors",
+        solidColors,
+        colorTextPrimary,
         colorTextSecondary,
       );
-      row.appendChild(scaleLabel);
 
-      const scaleColors = blackWhiteColors.slice(i, i + 12);
+      const solidColorsSheetDarkMode = createSolidColorSheet(
+        "Dark colors",
+        solidColors,
+        colorTextPrimary,
+        colorTextSecondary,
+        "DARK",
+      );
+      solidColorsSheetDarkMode.setExplicitVariableModeForCollection(
+        collection,
+        darkModeId,
+      );
+      solidColorsSheetDarkMode.y = solidColorsSheet.height + 128;
 
-      scaleColors.forEach((color) => {
-        const swatchWrapper = createSwatchFrame(
-          colorCheckerboardTileBase,
-          "Wrapper",
-        );
-        const swatch = createSwatchFrame(color, getColorName(color.name));
-        const checkerboard = createCheckerboard(
-          colorCheckerboardTileContrast,
-          swatchWrapper,
-        );
-        swatchWrapper.appendChild(checkerboard);
-        swatchWrapper.appendChild(swatch);
-        row.appendChild(swatchWrapper);
-      });
-      bwWrapper.appendChild(row);
+      // Create sheet with transparent colors
+      const alphaColorsSheet = createAlphaColorSheet(
+        "Transparent colors",
+        alphaColors,
+        blackWhiteColors,
+        colorTextPrimary,
+        colorTextSecondary,
+        colorCheckerboardTileBase,
+        colorCheckerboardTileContrast,
+      );
+      alphaColorsSheet.x = solidColorsSheet.width + 128;
+
+      const alphaColorsSheetDarkMode = createAlphaColorSheet(
+        "Transparent colors",
+        alphaColors,
+        blackWhiteColors,
+        colorTextPrimary,
+        colorTextSecondary,
+        colorCheckerboardTileBase,
+        colorCheckerboardTileContrast,
+        "DARK",
+      );
+      alphaColorsSheetDarkMode.setExplicitVariableModeForCollection(
+        collection,
+        darkModeId,
+      );
+      alphaColorsSheetDarkMode.x = alphaColorsSheet.x;
+      alphaColorsSheetDarkMode.y = alphaColorsSheet.height + 128;
+
+      notification.cancel();
     }
-    alphaColorsSheet.appendChild(bwWrapper);
-
-    notification.cancel();
 
     // -------------------------------------------------------------------------
     // CLOSE PLUGIN

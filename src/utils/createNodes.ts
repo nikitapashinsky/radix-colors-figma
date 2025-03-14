@@ -1,5 +1,51 @@
-import { SWATCH_WIDTH, SWATCH_HEIGHT, SPACING } from "./constants";
+import {
+  SWATCH_WIDTH,
+  SWATCH_HEIGHT,
+  SPACING,
+  GRADIENT_BORDER_FILLS,
+} from "./constants";
 import { getScaleName, getColorName } from "./transformColors";
+
+export function createGradientBorder(
+  node: FrameNode,
+  mode: "LIGHT" | "DARK" = "LIGHT",
+) {
+  if (mode === "LIGHT") {
+    node.strokes = [
+      {
+        type: "GRADIENT_LINEAR",
+        gradientTransform: [
+          [1, 0, 0],
+          [0, 1, 0],
+        ],
+        gradientStops: [
+          { position: 0, color: { r: 0, g: 0, b: 0, a: 0 } },
+          { position: 0.5, color: { r: 0, g: 0, b: 0, a: 0.2 } },
+          { position: 1, color: { r: 0, g: 0, b: 0, a: 0 } },
+        ],
+      },
+    ];
+  }
+  if (mode === "DARK") {
+    node.strokes = [
+      {
+        type: "GRADIENT_LINEAR",
+        gradientTransform: [
+          [1, 0, 0],
+          [0, 1, 0],
+        ],
+        gradientStops: [
+          { position: 0, color: { r: 1, g: 1, b: 1, a: 0 } },
+          { position: 0.5, color: { r: 1, g: 1, b: 1, a: 0.2 } },
+          { position: 1, color: { r: 1, g: 1, b: 1, a: 0 } },
+        ],
+      },
+    ];
+  }
+  node.strokeAlign = "OUTSIDE";
+  node.strokeBottomWeight = 1;
+  return node;
+}
 
 export const createVStack = (
   spacing: number = 0,
@@ -40,6 +86,7 @@ export const createSolidColorSheet = (
   scalesArray: Variable[],
   titleTextColor: Variable,
   bodyTextColor: Variable,
+  mode: "LIGHT" | "DARK" = "LIGHT",
 ): FrameNode => {
   const sheet = figma.createFrame();
   sheet.name = name;
@@ -51,7 +98,11 @@ export const createSolidColorSheet = (
   sheet.paddingBottom = 48;
   sheet.paddingLeft = 48;
   sheet.paddingRight = 48;
-  sheet.fills = [figma.util.solidPaint("#FFFFFF")];
+  if (mode === "LIGHT") {
+    sheet.fills = [figma.util.solidPaint("#FFFFFF")];
+  } else if (mode === "DARK") {
+    sheet.fills = [figma.util.solidPaint("#0B0B0B")];
+  }
 
   const title = createTitle(name, titleTextColor);
   const titleWrapper = createVStack(24);
@@ -77,107 +128,37 @@ export const createSolidColorSheet = (
   stepGroupsWrapper.clipsContent = false;
 
   const backgroundsWrapper = createHStack();
+  backgroundsWrapper.name = "Backgrounds";
   backgroundsWrapper.resize(SWATCH_WIDTH * 2 + SPACING, SWATCH_HEIGHT);
-  backgroundsWrapper.strokes = [
-    {
-      type: "GRADIENT_LINEAR",
-      gradientTransform: [
-        [1, 0, 0],
-        [0, 1, 0],
-      ],
-      gradientStops: [
-        { position: 0, color: { r: 0, g: 0, b: 0, a: 0 } },
-        { position: 0.5, color: { r: 0, g: 0, b: 0, a: 0.1 } },
-        { position: 1, color: { r: 0, g: 0, b: 0, a: 0 } },
-      ],
-    },
-  ];
-  backgroundsWrapper.strokeAlign = "OUTSIDE";
-  backgroundsWrapper.strokeBottomWeight = 1;
+  createGradientBorder(backgroundsWrapper, mode);
   backgroundsWrapper.appendChild(createBodyText("Backgrounds", bodyTextColor));
 
   const componentsWrapper = createHStack();
+  componentsWrapper.name = "Interactive components";
   componentsWrapper.resize(SWATCH_WIDTH * 3 + SPACING * 2, SWATCH_HEIGHT);
-  componentsWrapper.strokes = [
-    {
-      type: "GRADIENT_LINEAR",
-      gradientTransform: [
-        [1, 0, 0],
-        [0, 1, 0],
-      ],
-      gradientStops: [
-        { position: 0, color: { r: 0, g: 0, b: 0, a: 0 } },
-        { position: 0.5, color: { r: 0, g: 0, b: 0, a: 0.1 } },
-        { position: 1, color: { r: 0, g: 0, b: 0, a: 0 } },
-      ],
-    },
-  ];
-  componentsWrapper.strokeAlign = "OUTSIDE";
-  componentsWrapper.strokeBottomWeight = 1;
+  createGradientBorder(componentsWrapper, mode);
   componentsWrapper.appendChild(
     createBodyText("Interactive components", bodyTextColor),
   );
 
   const bordersWrapper = createHStack();
+  bordersWrapper.name = "Borders and separators";
   bordersWrapper.resize(SWATCH_WIDTH * 3 + SPACING * 2, SWATCH_HEIGHT);
-  bordersWrapper.strokes = [
-    {
-      type: "GRADIENT_LINEAR",
-      gradientTransform: [
-        [1, 0, 0],
-        [0, 1, 0],
-      ],
-      gradientStops: [
-        { position: 0, color: { r: 0, g: 0, b: 0, a: 0 } },
-        { position: 0.5, color: { r: 0, g: 0, b: 0, a: 0.1 } },
-        { position: 1, color: { r: 0, g: 0, b: 0, a: 0 } },
-      ],
-    },
-  ];
-  bordersWrapper.strokeAlign = "OUTSIDE";
-  bordersWrapper.strokeBottomWeight = 1;
+  createGradientBorder(bordersWrapper, mode);
   bordersWrapper.appendChild(
     createBodyText("Borders and separators", bodyTextColor),
   );
 
   const solidColorsWrapper = createHStack();
+  solidColorsWrapper.name = "Solid colors";
   solidColorsWrapper.resize(SWATCH_WIDTH * 2 + SPACING, SWATCH_HEIGHT);
-  solidColorsWrapper.strokes = [
-    {
-      type: "GRADIENT_LINEAR",
-      gradientTransform: [
-        [1, 0, 0],
-        [0, 1, 0],
-      ],
-      gradientStops: [
-        { position: 0, color: { r: 0, g: 0, b: 0, a: 0 } },
-        { position: 0.5, color: { r: 0, g: 0, b: 0, a: 0.1 } },
-        { position: 1, color: { r: 0, g: 0, b: 0, a: 0 } },
-      ],
-    },
-  ];
-  solidColorsWrapper.strokeAlign = "OUTSIDE";
-  solidColorsWrapper.strokeBottomWeight = 1;
+  createGradientBorder(solidColorsWrapper, mode);
   solidColorsWrapper.appendChild(createBodyText("Solid colors", bodyTextColor));
 
   const accessibleTextWrapper = createHStack();
+  accessibleTextWrapper.name = "Accessible text";
   accessibleTextWrapper.resize(SWATCH_WIDTH * 2 + SPACING, SWATCH_HEIGHT);
-  accessibleTextWrapper.strokes = [
-    {
-      type: "GRADIENT_LINEAR",
-      gradientTransform: [
-        [1, 0, 0],
-        [0, 1, 0],
-      ],
-      gradientStops: [
-        { position: 0, color: { r: 0, g: 0, b: 0, a: 0 } },
-        { position: 0.5, color: { r: 0, g: 0, b: 0, a: 0.1 } },
-        { position: 1, color: { r: 0, g: 0, b: 0, a: 0 } },
-      ],
-    },
-  ];
-  accessibleTextWrapper.strokeAlign = "OUTSIDE";
-  accessibleTextWrapper.strokeBottomWeight = 1;
+  createGradientBorder(accessibleTextWrapper, mode);
   accessibleTextWrapper.appendChild(
     createBodyText("Accessible text", bodyTextColor),
   );
@@ -274,10 +255,12 @@ export const createCheckerboard = (tileColor: Variable, parent: FrameNode) => {
 export const createAlphaColorSheet = (
   name: string,
   scalesArray: Variable[],
+  blackWhiteScales: Variable[],
   titleTextColor: Variable,
   bodyTextColor: Variable,
   checkerBoardBaseColor: Variable,
   checkerBoardTileColor: Variable,
+  mode: "LIGHT" | "DARK" = "LIGHT",
 ): FrameNode => {
   const sheet = figma.createFrame();
   sheet.name = name;
@@ -289,7 +272,8 @@ export const createAlphaColorSheet = (
   sheet.paddingBottom = 48;
   sheet.paddingLeft = 48;
   sheet.paddingRight = 48;
-  sheet.fills = [figma.util.solidPaint("#FFFFFF")];
+  if (mode === "LIGHT") sheet.fills = [figma.util.solidPaint("#FFFFFF")];
+  else sheet.fills = [figma.util.solidPaint("#0B0B0B")];
 
   const title = createTitle(name, titleTextColor);
   const titleWrapper = createVStack(24);
@@ -315,42 +299,37 @@ export const createAlphaColorSheet = (
   stepGroupsWrapper.clipsContent = false;
 
   const backgroundsWrapper = createHStack();
+  backgroundsWrapper.name = "Backgrounds";
   backgroundsWrapper.resize(SWATCH_WIDTH * 2 + SPACING, SWATCH_HEIGHT);
-  backgroundsWrapper.strokes = [figma.util.solidPaint("#0000000d")];
-  backgroundsWrapper.strokeAlign = "OUTSIDE";
-  backgroundsWrapper.strokeBottomWeight = 1;
+  createGradientBorder(backgroundsWrapper, mode);
   backgroundsWrapper.appendChild(createBodyText("Backgrounds", bodyTextColor));
 
   const componentsWrapper = createHStack();
+  componentsWrapper.name = "Interactive components";
   componentsWrapper.resize(SWATCH_WIDTH * 3 + SPACING * 2, SWATCH_HEIGHT);
-  componentsWrapper.strokes = [figma.util.solidPaint("#0000000d")];
-  componentsWrapper.strokeAlign = "OUTSIDE";
-  componentsWrapper.strokeBottomWeight = 1;
+  createGradientBorder(componentsWrapper, mode);
   componentsWrapper.appendChild(
     createBodyText("Interactive components", bodyTextColor),
   );
 
   const bordersWrapper = createHStack();
+  bordersWrapper.name = "Borders and separators";
   bordersWrapper.resize(SWATCH_WIDTH * 3 + SPACING * 2, SWATCH_HEIGHT);
-  bordersWrapper.strokes = [figma.util.solidPaint("#0000000d")];
-  bordersWrapper.strokeAlign = "OUTSIDE";
-  bordersWrapper.strokeBottomWeight = 1;
+  createGradientBorder(bordersWrapper, mode);
   bordersWrapper.appendChild(
     createBodyText("Borders and separators", bodyTextColor),
   );
 
   const solidColorsWrapper = createHStack();
+  solidColorsWrapper.name = "Solid colors";
   solidColorsWrapper.resize(SWATCH_WIDTH * 2 + SPACING, SWATCH_HEIGHT);
-  solidColorsWrapper.strokes = [figma.util.solidPaint("#0000000d")];
-  solidColorsWrapper.strokeAlign = "OUTSIDE";
-  solidColorsWrapper.strokeBottomWeight = 1;
+  createGradientBorder(solidColorsWrapper, mode);
   solidColorsWrapper.appendChild(createBodyText("Solid colors", bodyTextColor));
 
   const accessibleTextWrapper = createHStack();
+  accessibleTextWrapper.name = "Accessible text";
   accessibleTextWrapper.resize(SWATCH_WIDTH * 2 + SPACING, SWATCH_HEIGHT);
-  accessibleTextWrapper.strokes = [figma.util.solidPaint("#0000000d")];
-  accessibleTextWrapper.strokeAlign = "OUTSIDE";
-  accessibleTextWrapper.strokeBottomWeight = 1;
+  createGradientBorder(accessibleTextWrapper, mode);
   accessibleTextWrapper.appendChild(
     createBodyText("Accessible text", bodyTextColor),
   );
@@ -409,6 +388,90 @@ export const createAlphaColorSheet = (
     rowsWrapper.appendChild(row);
   }
   sheet.appendChild(rowsWrapper);
+
+  // Create section with black and white colors
+  const bwWrapper = createVStack(SPACING);
+  bwWrapper.name = "Shadows, highlights, and overlays";
+
+  const bwHeaderWrapper = createHStack();
+  bwHeaderWrapper.name = "Header Wrapper";
+  bwHeaderWrapper.paddingLeft = 120 + SPACING;
+  bwHeaderWrapper.clipsContent = false;
+
+  const bwHeader = createHStack(SPACING);
+  bwHeader.name = "Header";
+  bwHeader.counterAxisAlignItems = "CENTER";
+  bwHeader.primaryAxisAlignItems = "CENTER";
+  bwHeader.paddingTop = 16;
+  bwHeader.paddingBottom = 16;
+  createGradientBorder(bwHeader, mode);
+
+  const bwHeaderTitle = createBodyText(
+    "Shadows, highlights, and overlays",
+    bodyTextColor,
+  );
+
+  bwHeader.appendChild(bwHeaderTitle);
+  bwHeaderWrapper.appendChild(bwHeader);
+  bwHeader.layoutSizingHorizontal = "FILL";
+  bwWrapper.appendChild(bwHeaderWrapper);
+  bwHeaderWrapper.layoutSizingHorizontal = "FILL";
+
+  const bwStepsWrapper = createHStack(SPACING);
+  bwStepsWrapper.name = "Steps";
+  bwStepsWrapper.paddingLeft = 120 + SPACING;
+
+  for (let i = 0; i < 12; i++) {
+    const stepLabelWrapper = figma.createFrame();
+    stepLabelWrapper.name = (i + 1).toString();
+    stepLabelWrapper.resize(SWATCH_WIDTH, SWATCH_HEIGHT);
+    stepLabelWrapper.layoutMode = "HORIZONTAL";
+    stepLabelWrapper.layoutSizingHorizontal = "FIXED";
+    stepLabelWrapper.primaryAxisAlignItems = "CENTER";
+    stepLabelWrapper.counterAxisAlignItems = "CENTER";
+    stepLabelWrapper.fills = [];
+
+    const stepLabel = createBodyText((i + 1).toString(), bodyTextColor);
+
+    stepLabelWrapper.appendChild(stepLabel);
+    bwStepsWrapper.appendChild(stepLabelWrapper);
+  }
+
+  bwWrapper.appendChild(bwStepsWrapper);
+
+  // Create black and white transparent color swatches
+  for (let i = 0; i < blackWhiteScales.length; i += 12) {
+    const row = figma.createFrame();
+    row.name = getScaleName(blackWhiteScales[i].name);
+    row.layoutMode = "HORIZONTAL";
+    row.layoutSizingHorizontal = "HUG";
+    row.layoutSizingVertical = "HUG";
+    row.itemSpacing = SPACING;
+    row.fills = [];
+
+    const scaleLabel = createScaleLabel(
+      getScaleName(blackWhiteScales[i].name),
+      bodyTextColor,
+    );
+    row.appendChild(scaleLabel);
+
+    const scaleColors = blackWhiteScales.slice(i, i + 12);
+
+    scaleColors.forEach((color) => {
+      const swatchWrapper = createSwatchFrame(checkerBoardBaseColor, "Wrapper");
+      const swatch = createSwatchFrame(color, getColorName(color.name));
+      const checkerboard = createCheckerboard(
+        checkerBoardTileColor,
+        swatchWrapper,
+      );
+      swatchWrapper.appendChild(checkerboard);
+      swatchWrapper.appendChild(swatch);
+      row.appendChild(swatchWrapper);
+    });
+    bwWrapper.appendChild(row);
+  }
+  sheet.appendChild(bwWrapper);
+  bwWrapper.layoutSizingHorizontal = "FILL";
 
   return sheet;
 };
