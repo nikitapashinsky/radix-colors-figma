@@ -23,14 +23,16 @@ export function createVariableName(string: string) {
 }
 
 export function createWebSyntax(string: string) {
-  // From https://github.com/radix-ui/colors/blob/8a03dad3bc93ea4ed48ce2b70847a3538097e02f/scripts/build-css-modules.js#L53
-  // Adds a hyphen between the lowercase letter and digit (e.g. yellow10 -> yellow-10)
-  // Then adds a hyphen before the capital letter (e.g. yellowA10 -> yellow-a10)
+  /*
+    From https://github.com/radix-ui/colors/blob/8a03dad3bc93ea4ed48ce2b70847a3538097e02f/scripts/build-css-modules.js#L53
+    - Adds a hyphen between the lowercase letter and digit (e.g. yellow10 -> yellow-10)
+    - Then adds a hyphen before the capital letter (e.g. yellowA10 -> yellow-a10)
+  */
   const formattedString = string
     .replace(/([a-z])(\d)/, "$1-$2")
     .replace(/([A-Z])/g, "-$1")
     .toLowerCase();
-  return `--${formattedString}`;
+  return `--var(${formattedString})`;
 }
 
 export function sortColorStrings(colors: string[], order: string[]): string[] {

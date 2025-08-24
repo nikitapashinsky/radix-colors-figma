@@ -471,7 +471,7 @@ export const createAlphaColorSheet = (
     bwWrapper.appendChild(row);
   }
   sheet.appendChild(bwWrapper);
-  bwWrapper.layoutSizingHorizontal = "FILL";
+  bwWrapper.layoutSizingHorizontal = "HUG";
 
   return sheet;
 };
