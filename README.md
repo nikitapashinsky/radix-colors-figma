@@ -1,6 +1,27 @@
-# Convert Radix colors to Figma variables
+# Radix colors to Figma variables
 
-A single-purpose utility plugin I created to convert [Radix colors](https://github.com/radix-ui/colors/tree/main/src) to Figma variables. The plugin runs once without any UI and creates a variable collection with all colors.
+A single-purpose utility plugin I created to convert [Radix colors](https://github.com/radix-ui/colors/tree/main/src) to Figma variables. 
+
+The plugin runs once without any UI and creates a variable collection with all colors, and then renders 4 color sample sheets (solid and alpha colors, light and dark modes). 
+
+The plugin is dead simple and doesn't handle edge cases, so the following is assumed:
+
+- The user has a Figma Pro subscription (or higher) in order to create variables in two modes
+- There is no variable collection named "Radix Colors" already present in the file
+
+## Preview
+
+### Variable collection
+![Figma variable collection containing Radix colors](./.github/variables-preview.png)
+
+### Fill section
+![Figma fill section with the Radix Blue 9 color applied](./.github/fill-preview.png)
+
+### Light mode colors
+![](./.github/radix-colors-light.png)
+
+### Dark mode colors
+![](./.github/radix-colors-dark.png)
 
 ## Quickstart
 
